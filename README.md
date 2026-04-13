@@ -146,12 +146,6 @@ If you use this repository, please cite both the paper and the repository metada
 Example BibTeX entry:
 
 ```bibtex
-@article{tanhaei2026cqsspi,
-  author  = {Tanhaei, Mohammad},
-  title   = {Beyond Velocity: A Causal Quality- and Security-Sensitive Schedule Performance Index for AI-Assisted Software Projects},
-  journal = {Preprint},
-  year    = {2026}
-}
 ```
 
 ## License
