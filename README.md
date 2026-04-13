@@ -53,3 +53,111 @@ C-QSSPI/
 │   └── empirical_protocol.md
 └── supplementary/
     └── governance_playbook.md
+```
+
+## Installation
+
+Clone the repository and create a virtual environment:
+
+```bash
+git clone https://github.com/mtanhaei/C-QSSPI.git
+cd C-QSSPI
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r code/requirements.txt
+```
+
+## Reproducing the paper calculations
+
+### 1) Reproduce Table 5 and the Sprint 5 worked example
+
+```bash
+python code/compute_qssspi.py --data data/illustrative_sprints.csv
+```
+
+This script:
+
+- validates the input data
+- computes continuous debt-density terms
+- reproduces the publication table values for **QF**, **SF**, and **QSSPI**
+- prints the **Sprint 5 worked example** exactly as shown in the paper
+
+### 2) Reproduce the ablation summary (Table 7)
+
+```bash
+python code/ablation_study.py --data data/illustrative_sprints.csv
+```
+
+This script reproduces:
+
+- **Raw SPI average = 1.042**
+- **Quality-only average = 0.980** with **-6.2 pp**
+- **Full QSSPI average = 0.939** with **-10.3 pp**
+
+### 3) Run the synthetic counterfactual sandbox
+
+```bash
+python code/counterfactual_analysis.py --data data/illustrative_sprints.csv
+```
+
+This script provides a scenario-based CQSSPI sandbox for Sprint 5. It is intentionally framed as a **synthetic policy-analysis tool**, not as a fitted empirical causal estimator.
+
+## Usage examples
+
+### Save Table 5 as CSV
+
+```bash
+python code/compute_qssspi.py \
+  --data data/illustrative_sprints.csv \
+  --csv-out results_table5.csv
+```
+
+### Save Table 7 as CSV
+
+```bash
+python code/ablation_study.py \
+  --data data/illustrative_sprints.csv \
+  --csv-out results_table7.csv
+```
+
+### Evaluate a custom Sprint 5 scenario
+
+```bash
+python code/counterfactual_analysis.py \
+  --data data/illustrative_sprints.csv \
+  --ev-cf 123 \
+  --delta-td-cf 20 \
+  --delta-sd-cf 6
+```
+
+## Notes on reproducibility
+
+To match the paper exactly, the repository distinguishes between:
+
+1. **continuous internal computations** from the CQSS-SPI equations, and
+2. **publication-rounded display values** reported in the manuscript tables.
+
+This is important because the manuscript tables are reproduced from publication display values to three decimals.
+
+## Citation
+
+If you use this repository, please cite both the paper and the repository metadata in `CITATION.cff`.
+
+Example BibTeX entry:
+
+```bibtex
+@article{tanhaei2026cqsspi,
+  author  = {Tanhaei, Mohammad},
+  title   = {Beyond Velocity: A Causal Quality- and Security-Sensitive Schedule Performance Index for AI-Assisted Software Projects},
+  journal = {Preprint},
+  year    = {2026}
+}
+```
+
+## License
+
+This project is released under the **MIT License**. See [`LICENSE`](LICENSE).
+
+## Contact
+
+For academic or reproducibility questions related to this repository, please use the repository issue tracker or contact the author listed in the manuscript.
