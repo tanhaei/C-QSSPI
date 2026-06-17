@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the accompanying manuscript."
+title: "C-QSSPI: Reproducible materials for a causal quality- and security-sensitive schedule performance index"
+authors:
+  - family-names: "Tanhaei"
+    given-names: "Mohammad"
+year: 2026
+repository-code: "https://github.com/tanhaei/C-QSSPI"

@@ -7,25 +7,25 @@
 
 **Author:** Mohammad Tanhaei
 
-This repository contains the reproducible material for the illustrative scenario and metric calculations reported in the paper:
+This repository contains reproducible Python material for the current manuscript:
 
 > **Beyond Velocity: A Causal Quality- and Security-Sensitive Schedule Performance Index for AI-Assisted Software Projects**  
 > Mohammad Tanhaei
 
-## Short abstract
+## Repository scope
 
-Conventional software schedule indicators reward visible progress more readily than hidden quality preservation. This problem becomes sharper in AI-assisted software development, where Generative AI may accelerate coding and testing while simultaneously altering the formation of technical debt, the distribution of verification effort, and the profile of security risk. This repository operationalizes the **CQSS-SPI** framework for the paper's illustrative eight-sprint scenario and reproduces the numerical results for the debt-sensitive schedule metric, the Sprint 5 worked example, and the ablation summary reported in the manuscript.
+The manuscript evaluates CQSS-SPI through an anonymized eight-sprint retrospective case from the BioArc hospital information system. The case data in this repository are normalized project-control and quality/security remediation records. They are intended to reproduce the manuscript's numerical tables and the Sprint 5 worked example.
+
+The repository does **not** claim a controlled experiment, a fitted population-level causal model, or a multi-domain validation. Counterfactual values are presented as a BioArc single-case demonstration of the SCM logic used in the paper.
 
 ## Key features
 
-- Reproducible implementation of the **QSSPI** and **CQSSPI** metric family
-- Exact reproduction of the paper's **Table 5** using publication-rounded display values
-- Exact reproduction of the **Sprint 5 worked example**
-- Exact reproduction of the **Table 7 ablation summary**
-- Clean CSV source data for the eight-sprint illustrative scenario
-- A reproducible Python workflow using `pandas`, `numpy`, and `scipy`
-- A compact manuscript source tree and supporting appendices
-- No image assets or figure folders; the repository is focused on calculations, tables, and methodology
+- Reproduces the BioArc sprint case table used in the manuscript.
+- Reproduces the raw and corrected schedule-indicator table: `SPI_s`, `QF_s`, `SF_s`, and `QSSPI_s`.
+- Reproduces the Sprint 5 worked example.
+- Reproduces the component-wise ablation summary reported as Table 9 in the manuscript.
+- Reproduces the Sprint 5 counterfactual values used for Figure 6/Table 9 checks.
+- Provides a data-collection template and governance playbook for future field validation.
 
 ## Repository layout
 
@@ -34,20 +34,19 @@ C-QSSPI/
 ├── README.md
 ├── LICENSE
 ├── CITATION.cff
-├── .gitignore
-├── manuscript/
-│   ├── C-QSSPI.tex
-│   ├── bibliography.bib
-│   └── C-QSSPI.pdf
 ├── data/
-│   ├── illustrative_sprints.csv
+│   ├── bioarc_retrospective_sprints.csv
+│   ├── illustrative_sprints.csv              # compatibility copy of the BioArc case file
 │   └── README_data.md
 ├── code/
 │   ├── compute_qssspi.py
 │   ├── ablation_study.py
 │   ├── counterfactual_analysis.py
+│   ├── validate_reproduction.py
 │   ├── requirements.txt
 │   └── README_code.md
+├── tests/
+│   └── test_reproduction.py
 ├── appendices/
 │   ├── collection_sheet_template.xlsx
 │   └── empirical_protocol.md
@@ -57,101 +56,84 @@ C-QSSPI/
 
 ## Installation
 
-Clone the repository and create a virtual environment:
-
 ```bash
-git clone https://github.com/mtanhaei/C-QSSPI.git
-cd C-QSSPI
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r code/requirements.txt
 ```
 
-## Reproducing the paper calculations
+## Reproducing the manuscript calculations
 
-### 1) Reproduce Table 5 and the Sprint 5 worked example
+### 1) Reproduce Table 6, Table 7, and the Sprint 5 worked example
 
 ```bash
-python code/compute_qssspi.py --data data/illustrative_sprints.csv
+python code/compute_qssspi.py --data data/bioarc_retrospective_sprints.csv
 ```
 
 This script:
 
-- validates the input data
-- computes continuous debt-density terms
-- reproduces the publication table values for **QF**, **SF**, and **QSSPI**
-- prints the **Sprint 5 worked example** exactly as shown in the paper
+- validates the BioArc sprint data,
+- checks that the displayed `SPI_s` values are consistent with `EV_s / PV_s`,
+- reproduces the BioArc sprint table,
+- reproduces the raw/corrected schedule-indicator table,
+- prints the Sprint 5 worked example.
 
-### 2) Reproduce the ablation summary (Table 7)
-
-```bash
-python code/ablation_study.py --data data/illustrative_sprints.csv
-```
-
-This script reproduces:
-
-- **Raw SPI average = 1.042**
-- **Quality-only average = 0.980** with **-6.2 pp**
-- **Full QSSPI average = 0.939** with **-10.3 pp**
-
-### 3) Run the synthetic counterfactual sandbox
-
-```bash
-python code/counterfactual_analysis.py --data data/illustrative_sprints.csv
-```
-
-This script provides a scenario-based CQSSPI sandbox for Sprint 5. It is intentionally framed as a **synthetic policy-analysis tool**, not as a fitted empirical causal estimator.
-
-## Usage examples
-
-### Save Table 5 as CSV
+Optional exports:
 
 ```bash
 python code/compute_qssspi.py \
-  --data data/illustrative_sprints.csv \
-  --csv-out results_table5.csv
+  --data data/bioarc_retrospective_sprints.csv \
+  --table6-csv-out results_table6.csv \
+  --table7-csv-out results_table7.csv
 ```
 
-### Save Table 7 as CSV
+### 2) Reproduce the component-wise ablation summary, Table 9
 
 ```bash
-python code/ablation_study.py \
-  --data data/illustrative_sprints.csv \
-  --csv-out results_table7.csv
+python code/ablation_study.py --data data/bioarc_retrospective_sprints.csv
 ```
 
-### Evaluate a custom Sprint 5 scenario
+Target values:
+
+- Raw SPI average = `1.042`
+- Quality-only average = `0.980`
+- Full QSSPI average = `0.939`
+- Sprint 5 counterfactual values = `0.983`, `0.979`, and `0.993`
+
+### 3) Run the BioArc Sprint 5 counterfactual demonstration
+
+```bash
+python code/counterfactual_analysis.py --data data/bioarc_retrospective_sprints.csv
+```
+
+Custom scenario:
 
 ```bash
 python code/counterfactual_analysis.py \
-  --data data/illustrative_sprints.csv \
+  --data data/bioarc_retrospective_sprints.csv \
   --ev-cf 123 \
   --delta-td-cf 20 \
-  --delta-sd-cf 6
+  --delta-sd-cf 7.1106
+```
+
+### 4) Run all reproduction checks
+
+```bash
+python code/validate_reproduction.py
+python -m unittest discover -s tests
 ```
 
 ## Notes on reproducibility
 
-To match the paper exactly, the repository distinguishes between:
+The manuscript reports publication-rounded display values to three decimals. The code therefore distinguishes between:
 
-1. **continuous internal computations** from the CQSS-SPI equations, and
-2. **publication-rounded display values** reported in the manuscript tables.
-
-This is important because the manuscript tables are reproduced from publication display values to three decimals.
+1. continuous internal calculations from the CQSS-SPI equations, and
+2. publication-rounded values used to reproduce the manuscript tables exactly.
 
 ## Citation
 
-If you use this repository, please cite both the paper and the repository metadata in `CITATION.cff`.
-
-Example BibTeX entry:
-
-```bibtex
-```
+If you use this repository, please cite the manuscript and repository metadata in `CITATION.cff`.
 
 ## License
 
-This project is released under the **MIT License**. See [`LICENSE`](LICENSE).
-
-## Contact
-
-For academic or reproducibility questions related to this repository, please use the repository issue tracker or contact the author listed in the manuscript.
+This project is released under the MIT License. See `LICENSE`.

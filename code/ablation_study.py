@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""
-Reproduce the ablation summary (Table 7) for the C-QSSPI paper.
-
-The target publication averages are:
-- Raw SPI = 1.042
-- Quality-only = 0.980 (-6.2 pp)
-- Full QSSPI = 0.939 (-10.3 pp)
-"""
+"""Reproduce the component-wise ablation summary (Table 9) for the CQSS-SPI paper."""
 
 from __future__ import annotations
 
@@ -17,120 +10,117 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from compute_qssspi import (
-    PUBLISHED_QF,
-    PUBLISHED_QSSPI,
-    load_data,
-)
+from compute_qssspi import DEFAULT_DATA, PUBLISHED_QF, PUBLISHED_QSSPI, load_data
 
-# Synthetic scenario values used in the conceptual counterfactual illustration.
-SYNTHETIC_COUNTERFACTUALS = {
-    "CQSSPI (synthetic causal illustration, stronger gating)": 0.983,
-    "CQSSPI (synthetic causal illustration, selective AI restriction)": 0.979,
+BIOARC_SPRINT5_COUNTERFACTUALS = {
+    "Scenario-based CQSSPI_5 (stronger gating)": 0.983,
+    "Scenario-based CQSSPI_5 (selective AI restriction)": 0.979,
+    "Scenario-based CQSSPI_5 (lower compression)": 0.993,
 }
 
 
 def compute_quality_only(df: pd.DataFrame) -> np.ndarray:
-    """
-    Compute the quality-only publication layer.
-
-    This uses the publication-rounded QF values so that the reported average
-    matches the manuscript's displayed ablation summary.
-    """
+    """Compute the quality-only publication layer, SPI_s x QF_s."""
     return np.round(df["SPI_s"].to_numpy(dtype=float) * PUBLISHED_QF, 3)
 
 
-def build_table7(df: pd.DataFrame) -> pd.DataFrame:
-    """Build the publication-style Table 7 summary."""
-    raw_avg = np.round(df["SPI_s"].mean(), 3)
+def build_table9(df: pd.DataFrame) -> pd.DataFrame:
+    """Build Table 9 exactly as reported in the manuscript."""
+    raw_avg = float(np.round(df["SPI_s"].mean(), 3))
     quality_only = compute_quality_only(df)
-    quality_avg = np.round(quality_only.mean(), 3)
-    full_avg = np.round(PUBLISHED_QSSPI.mean(), 3)
+    quality_avg = float(np.round(quality_only.mean(), 3))
+    full_avg = float(np.round(PUBLISHED_QSSPI.mean(), 3))
+    observed_sprint5 = float(PUBLISHED_QSSPI[4])
 
     rows = [
         {
-            "Model Variant": "Raw SPI_s",
-            "Average Index": raw_avg,
-            "Delta from Raw SPI_s (%)": "---",
+            "Panel": "Panel A. Eight-sprint average values",
+            "Model variant": "Raw SPI_s",
+            "Index value": raw_avg,
+            "Comparison basis": "Reference",
         },
         {
-            "Model Variant": "Quality-only (SPI_s × QF_s)",
-            "Average Index": quality_avg,
-            "Delta from Raw SPI_s (%)": f"{(quality_avg - raw_avg) * 100:.1f}",
+            "Panel": "Panel A. Eight-sprint average values",
+            "Model variant": "Quality-only (SPI_s × QF_s)",
+            "Index value": quality_avg,
+            "Comparison basis": f"{(quality_avg - raw_avg) * 100:.1f} percentage points vs. raw SPI_s",
         },
         {
-            "Model Variant": "Full QSSPI (SPI_s × QF_s × SF_s)",
-            "Average Index": full_avg,
-            "Delta from Raw SPI_s (%)": f"{(full_avg - raw_avg) * 100:.1f}",
+            "Panel": "Panel A. Eight-sprint average values",
+            "Model variant": "Full QSSPI (SPI_s × QF_s × SF_s)",
+            "Index value": full_avg,
+            "Comparison basis": f"{(full_avg - raw_avg) * 100:.1f} percentage points vs. raw SPI_s",
         },
         {
-            "Model Variant": "QSSPI (Sprint 5)",
-            "Average Index": float(PUBLISHED_QSSPI[4]),
-            "Delta from Raw SPI_s (%)": "---",
+            "Panel": "Panel B. BioArc Sprint 5 counterfactual values",
+            "Model variant": "Observed QSSPI_5",
+            "Index value": observed_sprint5,
+            "Comparison basis": "Reference",
         },
     ]
 
-    for label, value in SYNTHETIC_COUNTERFACTUALS.items():
+    for label, value in BIOARC_SPRINT5_COUNTERFACTUALS.items():
         rows.append(
             {
-                "Model Variant": label,
-                "Average Index": value,
-                "Delta from Raw SPI_s (%)": f"{(value - float(PUBLISHED_QSSPI[4])) * 100:.1f}",
+                "Panel": "Panel B. BioArc Sprint 5 counterfactual values",
+                "Model variant": label,
+                "Index value": value,
+                "Comparison basis": f"+{(value - observed_sprint5) * 100:.1f} percentage points vs. observed QSSPI_5",
             }
         )
 
     return pd.DataFrame(rows)
 
 
-def print_summary(table7: pd.DataFrame) -> None:
-    """Print the ablation summary and a compact descriptive report."""
-    print("\nReproduced Table 7")
-    print("=" * 80)
-    print(table7.to_string(index=False))
-    print("=" * 80)
+# Backward-compatible alias from the earlier repository version.
+build_table7 = build_table9
 
-    q_only_values = compute_quality_only(load_data(DEFAULT_DATA))
+
+def print_summary(table9: pd.DataFrame, df: pd.DataFrame) -> None:
+    """Print Table 9 and a compact descriptive report."""
+    print("\nReproduced Table 9: ablation values for the BioArc retrospective case")
+    print("=" * 110)
+    print(table9.to_string(index=False))
+    print("=" * 110)
+
+    q_only_values = compute_quality_only(df)
     summary = stats.describe(q_only_values)
 
     print("\nQuality-only descriptive summary")
-    print("-" * 80)
+    print("-" * 110)
     print(f"n          = {summary.nobs}")
     print(f"min / max  = {summary.minmax[0]:.3f} / {summary.minmax[1]:.3f}")
     print(f"mean       = {np.mean(q_only_values):.3f}")
     print(f"variance   = {summary.variance:.6f}")
-    print("-" * 80)
+    print("-" * 110)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Reproduce the ablation summary (Table 7).")
+    parser = argparse.ArgumentParser(description="Reproduce the BioArc ablation summary (Table 9).")
     parser.add_argument(
         "--data",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "data" / "illustrative_sprints.csv",
-        help="Path to illustrative_sprints.csv",
+        default=DEFAULT_DATA,
+        help="Path to bioarc_retrospective_sprints.csv",
     )
     parser.add_argument(
         "--csv-out",
         type=Path,
         default=None,
-        help="Optional path for saving Table 7 as CSV.",
+        help="Optional path for saving Table 9 as CSV.",
     )
     return parser.parse_args()
-
-
-DEFAULT_DATA = Path(__file__).resolve().parents[1] / "data" / "illustrative_sprints.csv"
 
 
 def main() -> None:
     args = parse_args()
     df = load_data(args.data)
-    table7 = build_table7(df)
-
-    print_summary(table7)
+    table9 = build_table9(df)
+    print_summary(table9, df)
 
     if args.csv_out is not None:
-        table7.to_csv(args.csv_out, index=False)
-        print(f"\nSaved reproduced Table 7 to: {args.csv_out}")
+        table9.to_csv(args.csv_out, index=False)
+        print(f"\nSaved reproduced Table 9 to: {args.csv_out}")
 
 
 if __name__ == "__main__":

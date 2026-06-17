@@ -10,7 +10,7 @@ At sprint close, review three quantities together:
 
 1. **Raw SPI**
 2. **Debt-adjusted descriptive QSSPI**
-3. **Estimated or scenario-based CQSSPI comparisons**
+3. **Estimated or case-based CQSSPI comparisons**
 
 A useful governance conversation starts with the gap among these values.
 
@@ -52,15 +52,15 @@ Try one change at a time, such as:
 - [ ] Are severity weights documented?
 - [ ] Is AI usage intensity defined consistently?
 - [ ] Are release-blocking rules explicit?
-- [ ] Are counterfactual comparisons clearly labeled as estimated or scenario-based?
+- [ ] Are counterfactual comparisons clearly labeled as estimated or case-based?
 - [ ] Are managers trained not to over-interpret raw velocity?
 
 ## Cautions
 
 - A corrected schedule metric should improve managerial realism, not become a surveillance mechanism.
-- Synthetic scenario values must never be presented as fitted empirical causal effects.
+- BioArc single-case counterfactual values must not be presented as fitted population-level causal effects.
 - The metric is most useful when paired with transparent engineering process knowledge.
 
-## Relation to the illustrative repository
+## Relation to the repository
 
-This repository demonstrates the mechanics of the metric on a synthetic eight-sprint scenario. The playbook should therefore be interpreted as a deployment guide for future empirical use, not as a claim that the repository's scenario values are themselves field estimates.
+This repository reproduces the mechanics of the metric on the BioArc retrospective case. The playbook should therefore be interpreted as a deployment guide for future empirical use, not as a claim that the repository's case values establish cross-domain superiority over raw SPI.

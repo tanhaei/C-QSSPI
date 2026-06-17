@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the executable Python scripts required to reproduce the numerical content of the illustrative CQSS-SPI scenario.
+This directory contains the executable Python scripts required to reproduce the numerical content of the current CQSS-SPI manuscript. The scripts now follow the manuscript's revised framing: the data are an anonymized BioArc eight-sprint retrospective case, not a hypothetical synthetic dataset.
 
 ## Scripts
 
@@ -10,23 +10,27 @@ This directory contains the executable Python scripts required to reproduce the 
 
 Reproduces:
 
-- the publication-style **Table 5**
-- the **Sprint 5 worked example**
-- a compact descriptive summary of the reproduced QSSPI values
+- the BioArc sprint case table reported as Table 6,
+- the raw/corrected schedule indicator table reported as Table 7,
+- the Sprint 5 worked example,
+- a compact descriptive summary of the reproduced QSSPI values.
 
 Run:
 
 ```bash
-python code/compute_qssspi.py --data data/illustrative_sprints.csv
+python code/compute_qssspi.py --data data/bioarc_retrospective_sprints.csv
 ```
 
 Optional CSV export:
 
 ```bash
 python code/compute_qssspi.py \
-  --data data/illustrative_sprints.csv \
-  --csv-out results_table5.csv
+  --data data/bioarc_retrospective_sprints.csv \
+  --table6-csv-out results_table6.csv \
+  --table7-csv-out results_table7.csv
 ```
+
+The older `--csv-out` option remains available as a backward-compatible alias for saving Table 7.
 
 ---
 
@@ -34,22 +38,22 @@ python code/compute_qssspi.py \
 
 Reproduces:
 
-- the publication-style **Table 7** ablation summary
-- raw, quality-only, and full-QSSPI average values
-- the synthetic causal illustration rows used in the conceptual ablation summary
+- the component-wise ablation summary reported as Table 9,
+- raw, quality-only, and full-QSSPI average values,
+- the BioArc Sprint 5 counterfactual values reported in the manuscript.
 
 Run:
 
 ```bash
-python code/ablation_study.py --data data/illustrative_sprints.csv
+python code/ablation_study.py --data data/bioarc_retrospective_sprints.csv
 ```
 
 Optional CSV export:
 
 ```bash
 python code/ablation_study.py \
-  --data data/illustrative_sprints.csv \
-  --csv-out results_table7.csv
+  --data data/bioarc_retrospective_sprints.csv \
+  --csv-out results_table9.csv
 ```
 
 ---
@@ -58,32 +62,43 @@ python code/ablation_study.py \
 
 Provides:
 
-- a synthetic Sprint 5 counterfactual sandbox
-- internally consistent scenario calculations
-- a threshold analysis for the security-debt level required to return to `CQSSPI = 1.0`
+- the BioArc Sprint 5 counterfactual demonstration,
+- the Figure 6/Table 9 values: `0.947`, `0.947`, `0.983`, `0.979`, and `0.993`,
+- a threshold analysis for the security-debt level required to return to `CQSSPI = 1.0`,
+- optional user-defined counterfactual assumptions.
 
 Run:
 
 ```bash
-python code/counterfactual_analysis.py --data data/illustrative_sprints.csv
+python code/counterfactual_analysis.py --data data/bioarc_retrospective_sprints.csv
 ```
 
 Custom scenario:
 
 ```bash
 python code/counterfactual_analysis.py \
-  --data data/illustrative_sprints.csv \
+  --data data/bioarc_retrospective_sprints.csv \
   --ev-cf 123 \
   --delta-td-cf 20 \
-  --delta-sd-cf 6
+  --delta-sd-cf 7.1106
+```
+
+---
+
+### `validate_reproduction.py`
+
+Runs deterministic checks against the manuscript values.
+
+```bash
+python code/validate_reproduction.py
 ```
 
 ## Design note: publication-rounded vs continuous values
 
 To reproduce the paper faithfully, the repository distinguishes between:
 
-1. **continuous values** computed directly from the equations, and
-2. **publication-rounded values** shown in the manuscript tables.
+1. continuous values computed directly from the equations, and
+2. publication-rounded values shown in the manuscript tables.
 
 This distinction matters because the displayed paper tables are reported to three decimals and are reproduced exactly here.
 
@@ -94,6 +109,7 @@ The codebase uses:
 - `pandas`
 - `numpy`
 - `scipy`
+- `openpyxl` for the supplemental Excel collection sheet
 
 Install all requirements with:
 
@@ -103,9 +119,7 @@ pip install -r code/requirements.txt
 
 ## Reproducibility target values
 
-The repository is configured to reproduce the following values exactly:
-
-### Table 5
+### Table 7 QSSPI values
 
 - Sprint 1: `0.934`
 - Sprint 2: `0.968`
@@ -125,9 +139,9 @@ The repository is configured to reproduce the following values exactly:
 - `SF_5 = 0.924`
 - `QSSPI_5 = 0.947`
 
-### Table 7 averages
+### Table 9 averages and counterfactual values
 
 - Raw SPI = `1.042`
 - Quality-only = `0.980`
 - Full QSSPI = `0.939`
-- Deltas = `-6.2 pp` and `-10.3 pp`
+- Counterfactual values = `0.983`, `0.979`, and `0.993`

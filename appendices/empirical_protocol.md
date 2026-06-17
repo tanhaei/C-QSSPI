@@ -2,13 +2,13 @@
 
 ## Purpose
 
-This protocol documents how the illustrative CQSS-SPI framework can be extended into a future empirical field study. The present repository remains scenario-driven and reproducibility-focused; this document specifies how a later longitudinal validation can be designed.
+This protocol documents how the BioArc single-system retrospective case can be extended into a future multi-domain empirical field study. The present repository reproduces the BioArc case calculations; this document specifies how later longitudinal validation can be designed.
 
 ## Research questions
 
 1. How can a conventional SPI-style schedule indicator be extended to account explicitly for both technical debt and security debt in AI-assisted software projects?
 2. How can causal structure be incorporated so that intervention and counterfactual schedule questions become answerable?
-3. How does the corrected metric behave relative to raw SPI and a quality-only adjusted variant?
+3. How does the corrected metric behave relative to raw SPI and a quality-only adjusted variant in the BioArc retrospective case and in future domains?
 4. What practical measurement pipeline is required for deployment in real software organizations?
 
 ## Unit of analysis
@@ -95,7 +95,7 @@ Compare the corrected indicators against:
 
 - **H1**: AI assistance intensity is positively associated with same-sprint earned value.
 - **H2**: Under weak review and weak security gating, higher AI assistance intensity is associated with higher net security debt.
-- **H3**: CQSS-SPI predicts downstream schedule disruption better than raw SPI.
+- **H3**: CQSS-SPI predicts downstream schedule disruption better than raw SPI in future multi-sprint validation datasets.
 - **H4**: Stronger security gating can improve medium-horizon schedule realism even when immediate visible throughput declines.
 
 ## Statistical strategy
@@ -109,7 +109,7 @@ Compare the corrected indicators against:
 ### Causal layer
 - specify an SCM aligned with engineering process knowledge
 - justify identification assumptions explicitly
-- separate empirical estimates from scenario-based illustrations
+- separate fitted estimates from single-case scenario demonstrations
 
 ## Threats to validity
 
