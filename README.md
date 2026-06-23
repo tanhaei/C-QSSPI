@@ -36,7 +36,6 @@ C-QSSPI/
 ├── CITATION.cff
 ├── data/
 │   ├── bioarc_retrospective_sprints.csv
-│   ├── illustrative_sprints.csv              # compatibility copy of the BioArc case file
 │   └── README_data.md
 ├── code/
 │   ├── compute_qssspi.py
