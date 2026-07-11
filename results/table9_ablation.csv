@@ -1,0 +1,8 @@
+Panel,Model variant,Index_exact,Index value,Comparison basis
+Panel A. Eight-sprint average values,Raw SPI_s,1.043058418031244,1.043,Reference
+Panel A. Eight-sprint average values,Quality-only (SPI_s x QF_s),0.981017700309805,0.981,-6.2 percentage points vs. raw SPI_s
+Panel A. Eight-sprint average values,Full QSSPI (SPI_s x QF_s x SF_s),0.9397882469581454,0.94,-10.3 percentage points vs. raw SPI_s
+Panel B. BioArc Sprint 5 scenario values,Observed QSSPI_5,0.9461077647543751,0.946,Reference
+Panel B. BioArc Sprint 5 scenario values,Stronger gating (scenario),0.9836139197779792,0.984,+3.8 percentage points vs. observed QSSPI_5
+Panel B. BioArc Sprint 5 scenario values,Selective AI restriction (scenario),0.9799403361137279,0.98,+3.4 percentage points vs. observed QSSPI_5
+Panel B. BioArc Sprint 5 scenario values,Lower compression (scenario),0.9924219863530761,0.992,+4.6 percentage points vs. observed QSSPI_5

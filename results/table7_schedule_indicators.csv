@@ -1,0 +1,9 @@
+Sprint,SPI_s,QF_s,SF_s,QSSPI_s,Interpretation
+1,0.98,0.967,0.986,0.935,Slightly behind after quality/security correction
+2,1.03,0.959,0.98,0.968,Visible gain largely disappears and slightly reverses after correction
+3,1.03,0.951,0.975,0.953,Near-plan after correction
+4,1.1,0.922,0.944,0.958,Apparent lead falls back toward neutral
+5,1.13,0.908,0.925,0.946,Raw lead is mostly hidden debt
+6,1.11,0.899,0.907,0.907,Best raw sprint becomes effectively behind plan
+7,0.97,0.957,0.97,0.904,Governance correction still paying debt backlog
+8,0.99,0.973,0.983,0.948,Recovery toward realistic schedule position

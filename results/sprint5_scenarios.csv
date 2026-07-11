@@ -1,0 +1,6 @@
+Scenario,EV_cf,Delta_TD_cf,Delta_SD_cf,CQSSPI_exact,CQSSPI,Status,Change_pp
+Observed QSSPI_5,124.0,22.0,14.0,0.9461077647543751,0.946,observed record,0.0
+No security-gating increase (ablated),124.0,22.0,14.0,0.9461077647543751,0.946,null intervention; observed inputs retained,0.0
+Stronger gating (scenario),123.0,20.0,7.0,0.9836139197779792,0.984,deterministic sensitivity assumption,3.8
+Selective AI restriction (scenario),121.0,18.0,6.0,0.9799403361137279,0.98,deterministic sensitivity assumption,3.4
+Lower compression (scenario),119.0,15.0,3.0,0.9924219863530761,0.992,deterministic sensitivity assumption,4.6

@@ -3,35 +3,27 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
-## Beyond Velocity: A Causal Quality- and Security-Sensitive Schedule Performance Index for AI-Assisted Software Projects
-
-**Author:** Mohammad Tanhaei
-
-This repository contains reproducible Python material for the current manuscript:
+Reproducible material for:
 
 > **Beyond Velocity: A Causal Quality- and Security-Sensitive Schedule Performance Index for AI-Assisted Software Projects**  
 > Mohammad Tanhaei
 
-## Repository scope
+## Scope and evidentiary status
 
-The manuscript evaluates CQSS-SPI through an anonymized eight-sprint retrospective case from the BioArc hospital information system. The case data in this repository are normalized project-control and quality/security remediation records. They are intended to reproduce the manuscript's numerical tables and the Sprint 5 worked example.
+The repository analyzes an anonymized eight-sprint retrospective case from the BioArc hospital information system. The normalized sprint records are used to demonstrate the mechanics and interpretation of CQSS-SPI.
 
-The repository does **not** claim a controlled experiment, a fitted population-level causal model, or a multi-domain validation. Counterfactual values are presented as a BioArc single-case demonstration of the SCM logic used in the paper.
+This is a single-system retrospective case. It is not a controlled experiment, a fitted population-level causal model, or multi-domain validation. The Sprint 5 alternatives are disclosed deterministic sensitivity assumptions; they are not identified causal-effect estimates.
 
-## Key features
+## Reproducibility correction
 
-- Reproduces the BioArc sprint case table used in the manuscript.
-- Reproduces the raw and corrected schedule-indicator table: `SPI_s`, `QF_s`, `SF_s`, and `QSSPI_s`.
-- Reproduces the Sprint 5 worked example.
-- Reproduces the component-wise ablation summary reported as Table 9 in the manuscript.
-- Reproduces the Sprint 5 counterfactual values used for Figure 6/Table 9 checks.
-- Provides a data-collection template and governance playbook for future field validation.
+All reported factors and indices are now calculated directly from the manuscript equations. The two-decimal `SPI_s` values stored in the CSV are validated as display fields, but analysis uses full-precision `EV_s / PV_s`. Likewise, `QF_s`, `SF_s`, and `QSSPI_s` are rounded only after the complete equation has been evaluated. No publication-result arrays are used as computational inputs.
 
 ## Repository layout
 
 ```text
 C-QSSPI/
 ├── README.md
+├── REPRODUCIBILITY_AUDIT.md
 ├── LICENSE
 ├── CITATION.cff
 ├── data/
@@ -41,9 +33,12 @@ C-QSSPI/
 │   ├── compute_qssspi.py
 │   ├── ablation_study.py
 │   ├── counterfactual_analysis.py
+│   ├── generate_figures.py
 │   ├── validate_reproduction.py
 │   ├── requirements.txt
 │   └── README_code.md
+├── figures/
+├── results/
 ├── tests/
 │   └── test_reproduction.py
 ├── appendices/
@@ -57,82 +52,71 @@ C-QSSPI/
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r code/requirements.txt
 ```
 
-## Reproducing the manuscript calculations
+## Reproduce the manuscript
 
-### 1) Reproduce Table 6, Table 7, and the Sprint 5 worked example
+Compute Tables 6 and 7 and the Sprint 5 worked example:
 
 ```bash
 python code/compute_qssspi.py --data data/bioarc_retrospective_sprints.csv
 ```
 
-This script:
-
-- validates the BioArc sprint data,
-- checks that the displayed `SPI_s` values are consistent with `EV_s / PV_s`,
-- reproduces the BioArc sprint table,
-- reproduces the raw/corrected schedule-indicator table,
-- prints the Sprint 5 worked example.
-
-Optional exports:
-
-```bash
-python code/compute_qssspi.py \
-  --data data/bioarc_retrospective_sprints.csv \
-  --table6-csv-out results_table6.csv \
-  --table7-csv-out results_table7.csv
-```
-
-### 2) Reproduce the component-wise ablation summary, Table 9
+Compute the ablation summary:
 
 ```bash
 python code/ablation_study.py --data data/bioarc_retrospective_sprints.csv
 ```
 
-Target values:
-
-- Raw SPI average = `1.042`
-- Quality-only average = `0.980`
-- Full QSSPI average = `0.939`
-- Sprint 5 counterfactual values = `0.983`, `0.979`, and `0.993`
-
-### 3) Run the BioArc Sprint 5 counterfactual demonstration
+Run the disclosed Sprint 5 intervention-sensitivity scenarios:
 
 ```bash
 python code/counterfactual_analysis.py --data data/bioarc_retrospective_sprints.csv
 ```
 
-Custom scenario:
+Generate all quantitative manuscript figures:
 
 ```bash
-python code/counterfactual_analysis.py \
+python code/generate_figures.py \
   --data data/bioarc_retrospective_sprints.csv \
-  --ev-cf 123 \
-  --delta-td-cf 20 \
-  --delta-sd-cf 7.1106
+  --output-dir figures
 ```
 
-### 4) Run all reproduction checks
+Run the independent equation checks and the unit-test suite:
 
 ```bash
 python code/validate_reproduction.py
-python -m unittest discover -s tests
+python -m unittest discover -s tests -v
 ```
 
-## Notes on reproducibility
+## Corrected reference outputs
 
-The manuscript reports publication-rounded display values to three decimals. The code therefore distinguishes between:
+Using `lambda_q = 0.55`, `lambda_s = 0.70`, and `epsilon = 1`:
 
-1. continuous internal calculations from the CQSS-SPI equations, and
-2. publication-rounded values used to reproduce the manuscript tables exactly.
+| Sprint | QF | SF | QSSPI |
+| ---: | ---: | ---: | ---: |
+| 1 | 0.967 | 0.986 | 0.935 |
+| 2 | 0.959 | 0.980 | 0.968 |
+| 3 | 0.951 | 0.975 | 0.953 |
+| 4 | 0.922 | 0.944 | 0.958 |
+| 5 | 0.908 | 0.925 | 0.946 |
+| 6 | 0.899 | 0.907 | 0.907 |
+| 7 | 0.957 | 0.970 | 0.904 |
+| 8 | 0.973 | 0.983 | 0.948 |
 
-## Citation
+Eight-sprint averages are `1.043` for raw SPI, `0.981` for the quality-only index, and `0.940` for full QSSPI.
 
-If you use this repository, please cite the manuscript and repository metadata in `CITATION.cff`.
+The disclosed Sprint 5 sensitivity inputs and outputs are:
 
-## License
+| Scenario | EV_cf | Delta_TD_cf | Delta_SD_cf | CQSSPI | Change vs. observed |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Observed | 124 | 22 | 14 | 0.946 | 0.0 pp |
+| Stronger gating | 123 | 20 | 7 | 0.984 | +3.8 pp |
+| Selective AI restriction | 121 | 18 | 6 | 0.980 | +3.4 pp |
+| Lower compression | 119 | 15 | 3 | 0.992 | +4.6 pp |
 
-This project is released under the MIT License. See `LICENSE`.
+## Citation and license
+
+Citation metadata are provided in `CITATION.cff`. The code is released under the MIT License.
