@@ -6,6 +6,11 @@ import sys
 import tempfile
 import unittest
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -26,11 +31,23 @@ from compute_qssspi import (  # noqa: E402
     validate_metric_parameters,
 )
 from counterfactual_analysis import (  # noqa: E402
+    ABLATED_SCENARIO,
+    EXPECTED_SPRINT5_RECORD,
     build_counterfactual_table,
     cqsspi_from_assumptions,
     solve_security_debt_for_on_plan,
+    sprint5_scenarios,
 )
-from generate_figures import generate_all_figures  # noqa: E402
+from generate_figures import (  # noqa: E402
+    SCM_EDGES,
+    build_ablation_causal,
+    build_ablation_penalties,
+    build_counterfactual,
+    build_scatter,
+    build_time_series,
+    generate_all_figures,
+    parse_mermaid_scm,
+)
 
 
 class TestEquationBasedReproduction(unittest.TestCase):
@@ -167,6 +184,153 @@ class TestEquationBasedReproduction(unittest.TestCase):
             self.assertEqual({path.name for path in paths}, expected)
             for path in paths:
                 self.assertGreater(path.stat().st_size, 1_000)
+
+    def test_epsilon_is_reported_not_hard_coded(self) -> None:
+        default = sprint5_worked_example(self.df)
+        widened = sprint5_worked_example(self.df, epsilon=5.0)
+        self.assertEqual(default["epsilon"], EPSILON)
+        self.assertEqual(widened["epsilon"], 5.0)
+        self.assertAlmostEqual(widened["d_q_5_exact"], 22 / (124 + 5.0))
+
+    def test_scenario_reductions_are_relative_to_the_observed_record(self) -> None:
+        row = self.df.loc[self.df["Sprint"] == 5].iloc[0]
+        for column, expected in EXPECTED_SPRINT5_RECORD.items():
+            self.assertEqual(float(row[column]), expected)
+        by_name = {s.name: s for s in sprint5_scenarios(row)}
+        self.assertEqual(by_name["Stronger gating (scenario)"].ev_cf, 123.0)
+        self.assertEqual(by_name["Selective AI restriction (scenario)"].delta_td_cf, 18.0)
+        self.assertEqual(by_name["Lower compression (scenario)"].delta_sd_cf, 3.0)
+
+    def test_scenario_guard_rejects_mismatched_sprint5_record(self) -> None:
+        modified = self.df.copy()
+        modified.loc[modified["Sprint"] == 5, "EV_s"] = 130.0
+        with self.assertRaises(ValueError):
+            build_counterfactual_table(modified)
+
+
+class TestFiguresMatchPublishedTables(unittest.TestCase):
+    """Guard against figures drifting away from the tables they illustrate.
+
+    These tests read the values back off the Matplotlib artists, so a figure
+    built from stale or rounded inputs fails here instead of reaching the PDF.
+    """
+
+    TABLE7_QSSPI = [0.935, 0.968, 0.953, 0.958, 0.946, 0.907, 0.904, 0.948]
+    TABLE8_CQSSPI = [0.946, 0.984, 0.980, 0.992]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.df = load_data(DEFAULT_DATA)
+        cls.metrics = compute_continuous_metrics(cls.df)
+        cls.scenarios = build_counterfactual_table(cls.df)
+
+    @staticmethod
+    def _line_data(fig, label_fragment: str) -> np.ndarray:
+        ax = fig.axes[0]
+        for line in ax.lines:
+            if label_fragment.lower() in str(line.get_label()).lower():
+                return np.asarray(line.get_ydata(), dtype=float)
+        raise AssertionError(f"No plotted line matching {label_fragment!r}")
+
+    @staticmethod
+    def _bar_heights(fig) -> np.ndarray:
+        ax = fig.axes[0]
+        return np.asarray([p.get_height() for p in ax.patches], dtype=float)
+
+    def test_time_series_draws_exact_ev_over_pv_and_table7(self) -> None:
+        fig = build_time_series(self.metrics)
+        try:
+            spi = self._line_data(fig, "SPI_s")
+            qsspi = self._line_data(fig, "QSSPI_s")
+            # Must be the exact ratio, never the two-decimal CSV display field.
+            np.testing.assert_allclose(spi, self.df["EV_s"] / self.df["PV_s"], rtol=0, atol=1e-12)
+            np.testing.assert_allclose(np.round(qsspi, 3), self.TABLE7_QSSPI, rtol=0, atol=1e-12)
+        finally:
+            plt.close(fig)
+
+    def test_ablation_penalties_draws_all_three_table7_layers(self) -> None:
+        fig = build_ablation_penalties(self.metrics)
+        try:
+            np.testing.assert_allclose(
+                self._line_data(fig, "Raw SPI"),
+                self.df["EV_s"] / self.df["PV_s"], rtol=0, atol=1e-12,
+            )
+            np.testing.assert_allclose(
+                self._line_data(fig, "Quality-only"),
+                self.metrics["QSSPI_q_s"], rtol=0, atol=1e-12,
+            )
+            np.testing.assert_allclose(
+                np.round(self._line_data(fig, "Full QSSPI"), 3),
+                self.TABLE7_QSSPI, rtol=0, atol=1e-12,
+            )
+        finally:
+            plt.close(fig)
+
+    def test_scatter_draws_security_debt_density(self) -> None:
+        fig = build_scatter(self.metrics)
+        try:
+            drawn = np.sort(
+                np.concatenate([c.get_offsets()[:, 1] for c in fig.axes[0].collections])
+            )
+            np.testing.assert_allclose(
+                drawn, np.sort(self.metrics["d_s_s"].to_numpy()), rtol=0, atol=1e-12
+            )
+        finally:
+            plt.close(fig)
+
+    def test_counterfactual_bars_match_table8(self) -> None:
+        fig = build_counterfactual(self.scenarios)
+        try:
+            np.testing.assert_allclose(
+                np.round(self._bar_heights(fig), 3), self.TABLE8_CQSSPI, rtol=0, atol=1e-12
+            )
+        finally:
+            plt.close(fig)
+
+    def test_causal_ablation_bars_match_table9_panel_b(self) -> None:
+        fig = build_ablation_causal(self.scenarios)
+        try:
+            heights = np.round(self._bar_heights(fig), 3)
+            self.assertEqual(len(heights), 5)
+            # The ablated bar is a null intervention: identical to the observed bar.
+            self.assertEqual(heights[0], heights[1])
+            np.testing.assert_allclose(
+                np.delete(heights, 1), self.TABLE8_CQSSPI, rtol=0, atol=1e-12
+            )
+        finally:
+            plt.close(fig)
+
+    def test_scm_edges_match_the_manuscript_equations(self) -> None:
+        """Equations 23-25 plus the QSSPI parents define the graph exactly."""
+        self.assertEqual(set(SCM_EDGES), self._equation_edges())
+        self.assertIn(("T", "EV"), set(SCM_EDGES))
+
+    @staticmethod
+    def _equation_edges() -> set:
+        expected = set()
+        for parent in ("A", "C", "R", "X", "M"):          # Equation 23
+            expected.add((parent, "TD"))
+        for parent in ("A", "C", "G", "R", "X", "M"):     # Equation 24
+            expected.add((parent, "SD"))
+        for parent in ("A", "C", "X", "T", "M"):          # Equation 25
+            expected.add((parent, "EV"))
+        for parent in ("TD", "SD", "EV", "PV"):           # Equation 22
+            expected.add((parent, "Q"))
+        return expected
+
+    def test_mermaid_figure1_matches_the_equations(self) -> None:
+        """The Mermaid source of Figure 1 must encode the same causal graph."""
+        edges, _ = parse_mermaid_scm()
+        normalised = {(s, "Q" if d == "QSSPI" else d) for s, d in edges}
+        self.assertEqual(normalised, self._equation_edges())
+        self.assertEqual(len(edges), len(set(edges)), "duplicate edge in the Mermaid source")
+
+    def test_mermaid_link_styles_cover_every_edge_once(self) -> None:
+        """Adding an edge silently shifts linkStyle indices, so pin the mapping."""
+        edges, link_styles = parse_mermaid_scm()
+        styled = [index for indices in link_styles.values() for index in indices]
+        self.assertEqual(sorted(styled), list(range(len(edges))))
+        self.assertEqual(len(styled), len(set(styled)), "an edge is styled twice")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ from compute_qssspi import (
     compute_continuous_metrics,
     load_data,
 )
-from counterfactual_analysis import build_counterfactual_table
+from counterfactual_analysis import ABLATED_SCENARIO, OBSERVED_SCENARIO, build_counterfactual_table
 
 
 def compute_quality_only(
@@ -69,9 +69,9 @@ def build_table9(
     ]
 
     scenarios = build_counterfactual_table(df, lambda_q, lambda_s, epsilon)
-    reported = scenarios[scenarios["Scenario"] != "No security-gating increase (ablated)"]
+    reported = scenarios[scenarios["Scenario"] != ABLATED_SCENARIO]
     for scenario in reported.itertuples(index=False):
-        comparison = "Reference" if scenario.Scenario == "Observed QSSPI_5" else (
+        comparison = "Reference" if scenario.Scenario == OBSERVED_SCENARIO else (
             f"{scenario.Change_pp:+.1f} percentage points vs. observed QSSPI_5"
         )
         rows.append(

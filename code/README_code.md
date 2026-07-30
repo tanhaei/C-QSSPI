@@ -61,11 +61,16 @@ python code/ablation_study.py \
 
 ### `generate_figures.py`
 
-Generates `time_series`, `scatter_ai_debt`, `counterfactual_bar`, `ablation_penalties`, `ablation_causal`, and `scm_graph` in publication-ready vector formats.
+Generates `scm_graph`, `time_series`, `scatter_ai_debt`, `counterfactual_bar`, `ablation_penalties`, and `ablation_causal` in publication-ready vector formats.
 
 ```bash
 python code/generate_figures.py --output-dir figures
+python code/generate_figures.py --output-dir figures --formats png   # drafts
 ```
+
+Every figure has a `build_*` function that returns the Matplotlib figure without touching the disk. `tests/test_reproduction.py` uses those builders to read the plotted values back off the axes and compare them with Tables 7-9, so a figure built from stale or rounded inputs fails the test suite instead of reaching a PDF.
+
+`SOURCE_DATE_EPOCH` is pinned inside the script so repeated exports are byte-identical.
 
 ### `validate_reproduction.py`
 
@@ -89,3 +94,5 @@ The standard-library test runner is sufficient; `pytest` is not required.
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+`TestEquationBasedReproduction` checks the metric implementation against independent scalar calculations, input validation, negative-debt clamping, scenario guards, and threshold solving. `TestFiguresMatchPublishedTables` checks that what is drawn equals what is tabulated.

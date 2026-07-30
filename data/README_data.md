@@ -34,7 +34,7 @@ The values are normalized project-control and quality/security remediation recor
 - `SPI_s` is stored as displayed in the manuscript input table, not as a full-precision recomputation of `EV_s / PV_s`.
 - The loader validates that the supplied value is consistent with `EV_s / PV_s` at two-decimal precision and then replaces it in memory with exact `EV_s / PV_s`.
 - All metric factors are calculated at full precision; rounding occurs only in publication-output builders.
-- `illustrative_sprints.csv` is retained only as a byte-identical legacy alias of the primary file. New analyses should use `bioarc_retrospective_sprints.csv`.
+- The former `illustrative_sprints.csv` was a byte-identical duplicate of this file and has been removed. Use `bioarc_retrospective_sprints.csv`.
 
 ## Scope limitation
 

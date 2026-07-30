@@ -1,0 +1,76 @@
+---
+config:
+  layout: elk
+  fontFamily: "'Recursive Variable', sans-serif"
+  themeVariables:
+    fontFamily: "'Recursive Variable', sans-serif"
+  theme: base
+---
+%% Figure 1. Structural causal model underlying the CQSS-SPI framework.
+%% The edge set below is exactly the one implied by Equations 22-25:
+%%   Eq. 23  dTD <- A, C, R, X, M
+%%   Eq. 24  dSD <- A, C, G, R, X, M
+%%   Eq. 25  EV  <- A, C, X, T, M
+%%   Eq. 22  QSSPI <- EV, PV, dTD, dSD
+%% tests/test_reproduction.py parses this file and fails if it drifts from the
+%% equations, so edit the equations and this diagram together.
+flowchart TB
+  subgraph Inputs["Exogenous &amp; Governance Variables"]
+    A["AI Assistance Intensity<br><b><i>A</i><sub>s</sub></b>"]
+    C["Schedule Compression<br><b><i>C</i><sub>s</sub></b>"]
+    G["Security Gating<br><b><i>G</i><sub>s</sub></b>"]
+    R["Review Intensity<br><b><i>R</i><sub>s</sub></b>"]
+    T["Testing Intensity<br><b><i>T</i><sub>s</sub></b>"]
+    X["Experience Mix<br><b><i>X</i><sub>s</sub></b>"]
+    M["Module Criticality<br><b><i>M</i><sub>s</sub></b>"]
+    PV["Planned Value<br><b><i>PV</i><sub>s</sub></b>"]
+  end
+  subgraph Mediators["Mediators"]
+    EV["Earned Value<br><b><i>EV</i><sub>s</sub></b>"]
+    TD["Δ Technical Debt<br><b>Δ<i>TD</i><sub>s</sub></b>"]
+    SD["Δ Security Debt<br><b>Δ<i>SD</i><sub>s</sub></b>"]
+  end
+  %% edges 0-2
+  C --> EV & TD & SD
+  %% edges 3-5
+  A --> EV & TD & SD
+  %% edge 6
+  G --> SD
+  %% edges 7-8
+  R --> TD & SD
+  %% edges 9-11
+  X --> EV & TD & SD
+  %% edges 12-14
+  M --> EV & TD & SD
+  %% edge 15 -- required by Equations 21 and 25, missing from the earlier draft
+  T --> EV
+  %% edges 16-19
+  EV --> QSSPI["<b>CQSSPI</b><br>Quality- &amp; Security-Sensitive SPI"]
+  TD --> QSSPI
+  SD --> QSSPI
+  PV --> QSSPI
+  %% node classes
+  classDef capability fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b,rx:8,ry:8
+  classDef pressure fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100,rx:8,ry:8
+  classDef governance fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#1b5e20,rx:8,ry:8
+  classDef delivered fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#1b5e20,rx:8,ry:8
+  classDef debt fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#b71c1c,rx:8,ry:8
+  classDef outcome fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2.5px,color:#4a148c,font-weight:bold,rx:10,ry:10
+  %% assign classes
+  class A,X,PV capability
+  class C,M pressure
+  class G,R,T governance
+  class EV delivered
+  class TD,SD debt
+  class QSSPI outcome
+  %% subgraph styling
+  style Inputs fill:#fafafa,stroke:#b0bec5,stroke-width:1px,color:#37474f
+  style Mediators fill:#fafafa,stroke:#b0bec5,stroke-width:1px,color:#37474f
+  %% link styling, grouped by source so that adding an edge does not require
+  %% renumbering every rule
+  linkStyle 0,1,2,12,13,14 stroke:#e65100,stroke-width:1.6px,fill:none
+  linkStyle 3,4,5,9,10,11 stroke:#01579b,stroke-width:1.6px,fill:none
+  linkStyle 6,7,8,15 stroke:#1b5e20,stroke-width:1.6px,fill:none
+  linkStyle 16 stroke:#1b5e20,stroke-width:1.7px,fill:none
+  linkStyle 17,18 stroke:#b71c1c,stroke-width:1.7px,fill:none
+  linkStyle 19 stroke:#6a1b9a,stroke-width:1.7px,fill:none

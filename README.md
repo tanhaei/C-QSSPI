@@ -2,6 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![CI](https://github.com/tanhaei/C-QSSPI/actions/workflows/ci.yml/badge.svg)
 
 Reproducible material for:
 
@@ -16,7 +17,9 @@ This is a single-system retrospective case. It is not a controlled experiment, a
 
 ## Reproducibility correction
 
-All reported factors and indices are now calculated directly from the manuscript equations. The two-decimal `SPI_s` values stored in the CSV are validated as display fields, but analysis uses full-precision `EV_s / PV_s`. Likewise, `QF_s`, `SF_s`, and `QSSPI_s` are rounded only after the complete equation has been evaluated. No publication-result arrays are used as computational inputs.
+All reported factors and indices are calculated directly from the manuscript equations. The two-decimal `SPI_s` values stored in the CSV are validated as display fields, but analysis uses full-precision `EV_s / PV_s`. Likewise, `QF_s`, `SF_s`, and `QSSPI_s` are rounded only after the complete equation has been evaluated. No publication-result arrays are used as computational inputs.
+
+A second audit round extended this to the figures. Every figure is now built from the same equation-derived arrays as the tables, the test suite reads the plotted values back off the Matplotlib artists and compares them with Tables 7-9, and vector exports are byte-reproducible. See `REPRODUCIBILITY_AUDIT.md` and `MANUSCRIPT_CORRECTIONS.md`.
 
 ## Repository layout
 
@@ -24,8 +27,10 @@ All reported factors and indices are now calculated directly from the manuscript
 C-QSSPI/
 ├── README.md
 ├── REPRODUCIBILITY_AUDIT.md
+├── MANUSCRIPT_CORRECTIONS.md
 ├── LICENSE
 ├── CITATION.cff
+├── .github/workflows/ci.yml
 ├── data/
 │   ├── bioarc_retrospective_sprints.csv
 │   └── README_data.md
@@ -58,31 +63,23 @@ pip install -r code/requirements.txt
 
 ## Reproduce the manuscript
 
-Compute Tables 6 and 7 and the Sprint 5 worked example:
+Rebuild every table in `results/`:
 
 ```bash
-python code/compute_qssspi.py --data data/bioarc_retrospective_sprints.csv
+python code/compute_qssspi.py \
+  --table6-csv-out results/table6_sprint_case.csv \
+  --table7-csv-out results/table7_schedule_indicators.csv
+python code/ablation_study.py --csv-out results/table9_ablation.csv
+python code/counterfactual_analysis.py --csv-out results/sprint5_scenarios.csv
 ```
 
-Compute the ablation summary:
+Rebuild every manuscript figure:
 
 ```bash
-python code/ablation_study.py --data data/bioarc_retrospective_sprints.csv
+python code/generate_figures.py --output-dir figures
 ```
 
-Run the disclosed Sprint 5 intervention-sensitivity scenarios:
-
-```bash
-python code/counterfactual_analysis.py --data data/bioarc_retrospective_sprints.csv
-```
-
-Generate all quantitative manuscript figures:
-
-```bash
-python code/generate_figures.py \
-  --data data/bioarc_retrospective_sprints.csv \
-  --output-dir figures
-```
+`generate_figures.py` pins `SOURCE_DATE_EPOCH`, so a rebuild is byte-identical to the committed vector files and CI can diff them.
 
 Run the independent equation checks and the unit-test suite:
 
@@ -116,6 +113,20 @@ The disclosed Sprint 5 sensitivity inputs and outputs are:
 | Stronger gating | 123 | 20 | 7 | 0.984 | +3.8 pp |
 | Selective AI restriction | 121 | 18 | 6 | 0.980 | +3.4 pp |
 | Lower compression | 119 | 15 | 3 | 0.992 | +4.6 pp |
+
+## Figure provenance
+
+`figures/` contains the six figures used in the manuscript, all rebuilt from the corrected equations:
+
+| File | Manuscript figure |
+| --- | --- |
+| `scm_graph.mmd` | Figure 1 source, structural causal model (Mermaid) |
+| `scm_graph` | Figure 1, dependency-free Matplotlib rendering |
+| `time_series` | Figure 2, raw SPI against QSSPI |
+| `scatter_ai_debt` | Figure 3, AI intensity against security-debt density |
+| `counterfactual_bar` | Figure 4, Sprint 5 sensitivity scenarios |
+| `ablation_penalties` | Figure 5, penalty-component ablation |
+| `ablation_causal` | Figure 6, causal-layer ablation |
 
 ## Citation and license
 

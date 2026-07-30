@@ -30,6 +30,22 @@ from compute_qssspi import (
 )
 
 
+OBSERVED_SCENARIO = "Observed QSSPI_5"
+ABLATED_SCENARIO = "No security-gating increase (ablated)"
+
+# BioArc Sprint 5 record the disclosed reductions are defined against.
+EXPECTED_SPRINT5_RECORD = {"EV_s": 124.0, "Delta_TD_s": 22.0, "Delta_SD_s": 14.0}
+
+# Disclosed whole-unit reductions relative to the observed Sprint 5 record,
+# stated exactly as in the manuscript scenario table:
+#   (visible-output reduction, technical-debt reduction, security-debt reduction)
+SCENARIO_REDUCTIONS: dict[str, tuple[float, float, float]] = {
+    "Stronger gating (scenario)": (1.0, 2.0, 7.0),
+    "Selective AI restriction (scenario)": (3.0, 4.0, 8.0),
+    "Lower compression (scenario)": (5.0, 7.0, 11.0),
+}
+
+
 @dataclass(frozen=True)
 class ScenarioAssumption:
     """Disclosed deterministic inputs for one Sprint 5 what-if scenario."""
@@ -41,51 +57,62 @@ class ScenarioAssumption:
     status: str
 
 
+def _check_expected_record(sprint5: pd.Series) -> None:
+    """Fail loudly when the scenario reductions do not fit the supplied data.
+
+    The disclosed reductions are defined against the BioArc Sprint 5 record.
+    Applying them to an unrelated dataset would silently emit meaningless
+    counterfactual indices, so mismatches raise instead.
+    """
+    mismatches = {
+        column: (float(sprint5[column]), expected)
+        for column, expected in EXPECTED_SPRINT5_RECORD.items()
+        if not np.isclose(float(sprint5[column]), expected, atol=1e-9, rtol=0)
+    }
+    if mismatches:
+        detail = ", ".join(
+            f"{column}: supplied {actual:g}, expected {expected:g}"
+            for column, (actual, expected) in mismatches.items()
+        )
+        raise ValueError(
+            "The disclosed Sprint 5 sensitivity reductions are defined against the BioArc "
+            f"record ({detail}). Supply matching data or redefine SCENARIO_REDUCTIONS."
+        )
+
+
 def sprint5_scenarios(sprint5: pd.Series) -> list[ScenarioAssumption]:
     """Return observed and simple whole-unit sensitivity assumptions.
 
-    The three intervention inputs stay within the range of the BioArc sprint
-    record and intentionally use whole normalized-effort units.  They are
+    Each intervention is expressed as a whole-unit reduction relative to the
+    observed sprint record rather than as an absolute constant, which keeps the
+    code aligned with the wording of the manuscript scenario table.  They are
     assumptions for sensitivity analysis, not fitted causal estimates.
     """
+    _check_expected_record(sprint5)
     observed = {
         "ev_cf": float(sprint5["EV_s"]),
         "delta_td_cf": float(sprint5["Delta_TD_s"]),
         "delta_sd_cf": float(sprint5["Delta_SD_s"]),
     }
-    return [
+    scenarios = [
+        ScenarioAssumption(OBSERVED_SCENARIO, **observed, status="observed record"),
         ScenarioAssumption(
-            "Observed QSSPI_5",
-            **observed,
-            status="observed record",
-        ),
-        ScenarioAssumption(
-            "No security-gating increase (ablated)",
+            ABLATED_SCENARIO,
             **observed,
             status="null intervention; observed inputs retained",
         ),
-        ScenarioAssumption(
-            "Stronger gating (scenario)",
-            ev_cf=123.0,
-            delta_td_cf=20.0,
-            delta_sd_cf=7.0,
-            status="deterministic sensitivity assumption",
-        ),
-        ScenarioAssumption(
-            "Selective AI restriction (scenario)",
-            ev_cf=121.0,
-            delta_td_cf=18.0,
-            delta_sd_cf=6.0,
-            status="deterministic sensitivity assumption",
-        ),
-        ScenarioAssumption(
-            "Lower compression (scenario)",
-            ev_cf=119.0,
-            delta_td_cf=15.0,
-            delta_sd_cf=3.0,
-            status="deterministic sensitivity assumption",
-        ),
     ]
+    for name, (ev_cut, td_cut, sd_cut) in SCENARIO_REDUCTIONS.items():
+        scenarios.append(
+            ScenarioAssumption(
+                name,
+                ev_cf=observed["ev_cf"] - ev_cut,
+                delta_td_cf=observed["delta_td_cf"] - td_cut,
+                delta_sd_cf=observed["delta_sd_cf"] - sd_cut,
+                status="deterministic sensitivity assumption",
+            )
+        )
+    return scenarios
 
 
 def cqsspi_from_assumptions(
@@ -147,7 +174,7 @@ def build_counterfactual_table(
         )
 
     table = pd.DataFrame(records)
-    observed = float(table.loc[table["Scenario"] == "Observed QSSPI_5", "CQSSPI_exact"].iloc[0])
+    observed = float(table.loc[table["Scenario"] == OBSERVED_SCENARIO, "CQSSPI_exact"].iloc[0])
     table["Change_pp"] = ((table["CQSSPI_exact"] - observed) * 100.0).round(1)
     return table
 

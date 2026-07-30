@@ -191,6 +191,7 @@ def sprint5_worked_example(
         "EV_5": float(row["EV_s"]),
         "Delta_TD_5": float(row["Delta_TD_s"]),
         "Delta_SD_5": float(row["Delta_SD_s"]),
+        "epsilon": float(epsilon),
         "SPI_5_exact": float(row["SPI_s"]),
         "d_q_5_exact": float(row["d_q_s"]),
         "d_s_5_exact": float(row["d_s_s"]),
@@ -236,12 +237,13 @@ def print_worked_example(example: dict[str, float]) -> None:
     print("\nSprint 5 worked example")
     print("-" * 100)
     print(f"SPI_5 = {example['EV_5']:.0f} / {example['PV_5']:.0f} = {example['SPI_5_exact']:.3f}")
+    epsilon = example["epsilon"]
     print(
-        f"d_q_5 = {example['Delta_TD_5']:.0f} / ({example['EV_5']:.0f} + 1) "
+        f"d_q_5 = {example['Delta_TD_5']:.0f} / ({example['EV_5']:.0f} + {epsilon:g}) "
         f"= {example['d_q_5_display']:.3f}"
     )
     print(
-        f"d_s_5 = {example['Delta_SD_5']:.0f} / ({example['EV_5']:.0f} + 1) "
+        f"d_s_5 = {example['Delta_SD_5']:.0f} / ({example['EV_5']:.0f} + {epsilon:g}) "
         f"= {example['d_s_5_display']:.3f}"
     )
     print(f"QF_5     = {example['QF_5_display']:.3f}")
